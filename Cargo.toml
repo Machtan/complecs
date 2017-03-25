@@ -1,0 +1,7 @@
+[package]
+name = "complecs"
+version = "0.1.0"
+authors = ["Machtan <jako3047@gmail.com>"]
+
+[dependencies]
+froggy = { path = "../../foreign/froggy" }
