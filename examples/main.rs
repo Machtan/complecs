@@ -4,7 +4,7 @@ extern crate complecs;
 // ============ Components =============
 
 
-components_and_storage! {
+components_and_store! {
     /// Stores all the components!
     pub struct Components {
         /// The name of an entity.
@@ -44,7 +44,7 @@ process! {
     }
 }
 
-process_storage! {
+process_store! {
     pub struct Processes {
         print_info: PPrintInfo,
         double_age: PDoubleAge,
@@ -69,7 +69,7 @@ entity! {
     }
 }
 
-entity_storage! {
+entity_store! {
     pub struct Entities {
         player: EPlayer,
     }

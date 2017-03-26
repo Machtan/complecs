@@ -20,7 +20,7 @@ macro_rules! component {
 /// Declares multiple components with the given names and types, and 
 /// a struct for storing them.
 #[macro_export]
-macro_rules! components_and_storage {
+macro_rules! components_and_store {
     // No trailing comma.
     (
         $( #[ $store_meta:meta ] )*
@@ -40,7 +40,7 @@ macro_rules! components_and_storage {
         )*
         
         $( #[ $store_meta ] )*
-        component_storage! {
+        component_store! {
             pub struct $store {
                 $(
                     $member : $name,
@@ -58,7 +58,7 @@ macro_rules! components_and_storage {
             )+
         }
     ) => {
-        components_and_storage! {
+        components_and_store! {
             $( #[$store_meta] )*
             pub struct $store {
                 $(
@@ -84,7 +84,7 @@ macro_rules! process {
         $( #[$meta:meta] )*
         pub mod $mod:ident {
             $( #[$run_meta:meta] )*
-            pub fn $proc_id:ident::run( 
+            pub fn $proc_id:ident::run(
                 // Mutable components, always first.
                 $( mut $mut_arg:ident[$mut_gensym:ident] : &mut $mut_comp:ident, )*
                 
@@ -97,11 +97,11 @@ macro_rules! process {
         }
     ) => {
         $( #[$meta] )*
-        /// Process definition `[macro-generated]`.
+        /// Process definition namespace `[macro-generated]`.
         pub mod $mod {
             use super::complecs::traits;
             use super::complecs::froggy;
-            use std::fmt::Debug;
+            pub use std::fmt::Debug;
             
             // Empty tuple if no components specified
             
@@ -109,84 +109,81 @@ macro_rules! process {
             pub type ArgRefs = (
                 $( froggy::StorageRc<<super::$mut_comp as traits::CompId>::Type>, )*
                 $( froggy::StorageRc<<super::$comp as traits::CompId>::Type>, )* 
-            );
-            
-            // Arguments to this function
-            // pub type Args = ( $( &mut $mut_comp, )* $( &$comp, )* );
-            
-            /// Identifies this process.
-            pub struct $proc_id;
-            
-            impl traits::ProcId for $proc_id {
-                type ArgRefs = self::ArgRefs;
-            }
-            
-            // This blanket impl for T won't work anymore
-            // I should probably do something like with Entity::add_to
-            unsafe impl<S> traits::AddEntityToProcess<S> for $proc_id 
-              where S: traits::HasProcStore<$proc_id>
-                  $( + traits::HasCompStore<super::$mut_comp> )*
-                  $( + traits::HasCompStore<super::$comp> )*
-            {}
-            
-            // Ensure that arguments are only accessed once by this process.
-            $(
-                impl traits::HasArg<super::$mut_comp> for $proc_id {}
-            )*
-            $(
-                impl traits::HasArg<super::$comp> for $proc_id {}
-            )*
-            
-            
-            impl $proc_id {
-                $( #[$run_meta] )*
-                pub fn run<S>(sim: &mut S $(, $ext_arg : $ext_ty )* )
-                  where $proc_id: traits::AddEntityToProcess<S>,
-                        S: traits::HasProcStore<$proc_id>
-                      $( + traits::HasCompStore<super::$mut_comp> )*
-                      $( + traits::HasCompStore<super::$comp> )*
-                {
-                    $(  
-                        let mut $mut_arg = unsafe {
-                            &mut * <S as traits::HasCompStore<super::$mut_comp>>::get_mut_components(sim)
-                        }.write();
-                    )*
-                    $(
-                        let $arg = unsafe {
-                            & * <S as traits::HasCompStore<super::$comp>>::get_components(sim)
-                        }.read();
-                    )*
-                    
-                    for &( $( ref $mut_gensym, )* $( ref $gensym, )* )
-                    in &<S as traits::HasProcStore<$proc_id>>::process_members(sim).read() {
-                        $(
-                            let $mut_arg = $mut_arg.get_mut($mut_gensym);
-                        )*
-                        $(
-                            let $arg = $arg.get($gensym);
-                        )*
-                        $body
-                    }
-                }
-            }
-            
-            // Add the debug clause to allow the concatenation of bounds.
-            impl<E> traits::ProcArgsFrom<E> for $proc_id
-              where E: Debug 
-                       $( + traits::HasComp<super::$mut_comp> )*
-                       $( + traits::HasComp<super::$comp> )*
-            {
-                fn from_entity(e: &E) -> self::ArgRefs {
-                    (
-                        $(<E as traits::HasComp<super::$mut_comp>>::get(e).clone() , )* 
-                        $(<E as traits::HasComp<super::$comp>>::get(e).clone() , )*
-                    )
-                }
-            }              
+            );    
         }
         
-        // Bring the id into scope 
-        pub use self::$mod::$proc_id;
+        /// An ECS process.
+        pub struct $proc_id;
+        
+        // Mark this as a process identifier.
+        impl complecs::traits::ProcId for $proc_id {
+            type ArgRefs = self::$mod::ArgRefs;
+        }
+        
+        // Make sure that entities can only be added to this process 
+        // inside the right storage types.
+        unsafe impl<S> complecs::traits::AddEntityToProcess<S> for $proc_id 
+          where S: complecs::traits::HasProcStore<$proc_id>
+              $( + complecs::traits::HasCompStore<$mut_comp> )*
+              $( + complecs::traits::HasCompStore<$comp> )*
+        {}
+        
+        // Ensure that arguments are only accessed once by this process.
+        $(
+            impl complecs::traits::HasArg<$mut_comp> for $proc_id {}
+        )*
+        $(
+            impl complecs::traits::HasArg<$comp> for $proc_id {}
+        )*
+        
+        // Add the run function, and ensure that this too can only
+        // be run on a simulation type with the right components.
+        impl $proc_id {
+            $( #[$run_meta] )*
+            pub fn run<S>(sim: &mut S $(, $ext_arg : $ext_ty )* )
+              where $proc_id: complecs::traits::AddEntityToProcess<S>,
+                    S: complecs::traits::HasProcStore<$proc_id>
+                  $( + complecs::traits::HasCompStore<$mut_comp> )*
+                  $( + complecs::traits::HasCompStore<$comp> )*
+            {
+                $(  
+                    let mut $mut_arg = unsafe {
+                        &mut * <S as complecs::traits::HasCompStore<$mut_comp>>::get_mut_components(sim)
+                    }.write();
+                )*
+                $(
+                    let $arg = unsafe {
+                        & * <S as complecs::traits::HasCompStore<$comp>>::get_components(sim)
+                    }.read();
+                )*
+                
+                for &( $( ref $mut_gensym, )* $( ref $gensym, )* )
+                in &<S as complecs::traits::HasProcStore<$proc_id>>::process_members(sim).read() {
+                    $(
+                        let $mut_arg = $mut_arg.get_mut($mut_gensym);
+                    )*
+                    $(
+                        let $arg = $arg.get($gensym);
+                    )*
+                    $body
+                }
+            }
+        }
+        
+        // NOTE: The debug clause allows the concatenation of bounds.
+        // Ensure that generated entities can be added to this process.
+        impl<E> complecs::traits::ProcArgsFrom<E> for $proc_id
+          where E: self::$mod::Debug 
+                   $( + complecs::traits::HasComp<$mut_comp> )*
+                   $( + complecs::traits::HasComp<$comp> )*
+        {
+            fn from_entity(e: &E) -> self::$mod::ArgRefs {
+                (
+                    $(<E as complecs::traits::HasComp<$mut_comp>>::get(e).clone() , )* 
+                    $(<E as complecs::traits::HasComp<$comp>>::get(e).clone() , )*
+                )
+            }
+        }
     }
 }
 
@@ -261,9 +258,9 @@ macro_rules! entity {
             impl $entity_id {
                 /// Creates the source data for an entity of this type.
                 pub fn new_data( $( $comp_name : <super::$comp_id as traits::CompId>::Type ),* ) -> Data {
-                    Data {
+                    Data::new(
                         $( $comp_name ),*
-                    }
+                    )
                 }
             }
         
@@ -339,13 +336,13 @@ macro_rules! entity {
         }
         
         // Export the identifier.
-        pub use $entity::$entity_id;
+        pub use self::$entity::$entity_id;
     }
 }
 
 /// Declares a storage type for the identified components.
 #[macro_export]
-macro_rules! component_storage {
+macro_rules! component_store {
     // No trailing comma
     (
         $( #[$storage_meta:meta] )*
@@ -386,7 +383,7 @@ macro_rules! component_storage {
             )*
         }
     ) => {
-        component_storage! {
+        component_store! {
             $( #[$storage_meta] )*
             pub struct $storage {
                 $(
@@ -399,7 +396,7 @@ macro_rules! component_storage {
 
 /// Declares a storage stype for process arguments (members).
 #[macro_export]
-macro_rules! process_storage {
+macro_rules! process_store {
     // No trailing commas
     (
         $( #[ $storage_meta:meta ] )*
@@ -440,7 +437,7 @@ macro_rules! process_storage {
             )*
         }
     ) => {
-        process_storage! {
+        process_store! {
             $( #[$storage_meta] )*
             pub struct $storage {
                 $(
@@ -453,7 +450,7 @@ macro_rules! process_storage {
 
 /// Declares a storage stype for entities.
 #[macro_export]
-macro_rules! entity_storage {
+macro_rules! entity_store {
     // No trailing commas
     (
         $( #[ $storage_meta:meta ] )*
@@ -490,7 +487,7 @@ macro_rules! entity_storage {
             )*
         }
     ) => {
-        entity_storage! {
+        entity_store! {
             $( #[$storage_meta] )*
             pub struct $storage {
                 $(
