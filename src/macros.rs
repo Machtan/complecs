@@ -86,10 +86,10 @@ macro_rules! process {
             $( #[$run_meta:meta] )*
             pub fn $proc_id:ident::run(
                 // Mutable components, always first.
-                $( mut $mut_arg:ident[$mut_gensym:ident] : &mut $mut_comp:ident, )*
+                $( mut $mut_gensym:ident $mut_arg:ident : &mut $mut_comp:ident, )*
                 
                 // Immutable components.
-                $( ref $arg:ident[$gensym:ident] : & $comp:ident, )*
+                $( ref $gensym:ident $arg:ident : & $comp:ident, )*
                 
                 // External arguments (relevant here?)
                 $( ext $ext_arg:ident : $ext_ty:ty, )*
