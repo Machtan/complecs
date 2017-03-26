@@ -29,6 +29,7 @@ macro_rules! components_and_store {
                 $( #[ $comp_meta:meta ] )*
                 pub $member:ident : $name:ident ( $type:ty )
             ),*
+            $(,)*
         }
     ) => {
         
@@ -47,32 +48,15 @@ macro_rules! components_and_store {
                 )*
             }
         }
-    };
-    // Trailing comma
-    (
-        $( #[ $store_meta:meta ] )*
-        pub struct $store:ident {
-            $(
-                $( #[$comp_meta:meta] )*
-                pub $member:ident : $name:ident ( $type:ty ),
-            )+
-        }
-    ) => {
-        components_and_store! {
-            $( #[$store_meta] )*
-            pub struct $store {
-                $(
-                    $( #[$comp_meta] )*
-                    pub $member: $name ( $type )
-                ),*
-            }
-        }
     }
 }
 
 /// Declares a component with the members inside a created module.
 /// The process takes a set of mutable and immutable components as arguments,
 /// as declared with the `mut` and `ref` arguments.
+///
+/// The first identifier after the ref/mut is a symbol used in the generated code,
+/// but with no real influence on the function body.
 /// 
 /// The body of the run function is executed in a context, in which the
 /// components have been loaded and converted to their associated types.
@@ -350,6 +334,7 @@ macro_rules! component_store {
             $(
                 $member:ident : $component:ty
             ),*
+            $(,)*
         }
     ) => {
         /// A storage type for components in an ECS system.
@@ -373,24 +358,6 @@ macro_rules! component_store {
                 }
             }
         )*
-    };
-    // Trailing comma alias
-    (
-        $( #[$storage_meta:meta] )*
-        pub struct $storage:ident {
-            $(
-                $member:ident : $component:ident,
-            )*
-        }
-    ) => {
-        component_store! {
-            $( #[$storage_meta] )*
-            pub struct $storage {
-                $(
-                    $member : $component
-                ),*
-            }
-        }
     }
 }
 
@@ -404,6 +371,7 @@ macro_rules! process_store {
             $(
                 $member:ident : $proc_id:ty
             ),*
+            $(,)*
         }
     ) => {
         /// A storage type for arguments to an ECS process.
@@ -427,25 +395,7 @@ macro_rules! process_store {
                 }
             } 
         )*
-    };
-    // Trailing comma alias
-    (
-        $( #[$storage_meta:meta] )*
-        pub struct $storage:ident {
-            $(
-                $member:ident : $proc_id:ident,
-            )*
-        }
-    ) => {
-        process_store! {
-            $( #[$storage_meta] )*
-            pub struct $storage {
-                $(
-                    $member : $proc_id
-                ),*
-            }
-        }
-    };
+    }
 }
 
 /// Declares a storage stype for entities.
@@ -458,6 +408,7 @@ macro_rules! entity_store {
             $(
                 $member:ident : $mem_id:ty
             ),*
+            $(,)*
         }
     ) => {
         /// A storage type for entities in an ECS system.
@@ -477,24 +428,6 @@ macro_rules! entity_store {
                 }
             }
         )*
-    };
-    // Trailing comma alias
-    (
-        $( #[$storage_meta:meta] )*
-        pub struct $storage:ident {
-            $(
-                $member:ident : $mem_id:ident,
-            )*
-        }
-    ) => {
-        entity_store! {
-            $( #[$storage_meta] )*
-            pub struct $storage {
-                $(
-                    $member : $mem_id
-                ),*
-            }
-        }
     };
 }
 
