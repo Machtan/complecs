@@ -222,10 +222,10 @@ macro_rules! entity {
                         $( $comp_name ),*
                     }
                 }
-            }
-        
-            unsafe impl<S> traits::AddEntityToStore<self::$entity_id, S> for self::Data 
-              where S: traits::HasEntityStore<self::$entity_id>
+                
+                
+                pub fn add_to<S>(self, sim: &mut S) 
+                  where S: traits::HasEntityStore<self::$entity_id>
                     $(
                         + traits::HasCompStore<super::$comp_id>
                     )*
@@ -235,8 +235,7 @@ macro_rules! entity {
                     $(
                         , super::$proc_id : traits::AddEntityToProcess<S>
                     )*
-            {
-                fn add_to(self, sim: &mut S) {
+                {
                     $(
                         let $comp_name = unsafe {
                             &mut * <S as traits::HasCompStore<super::$comp_id>>::get_mut_components(sim)
@@ -252,6 +251,7 @@ macro_rules! entity {
                     ),* ,);
                     <S as traits::HasEntityStore<self::$entity_id>>::get_mut_entities(sim).push(entity);
                 }
+                
             }
         
             /// A struct holding references to the components of this entity inside

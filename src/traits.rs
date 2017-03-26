@@ -121,6 +121,7 @@ pub trait HasEntityStore<E: EntityId> {
     fn get_mut_entities(&mut self) -> &mut Vec<E::Data>;
 }
 
+/*
 /// Signifies that the entity can be added to a simulation that fulfils a
 /// set of requirements.
 ///
@@ -139,6 +140,4 @@ pub trait HasEntityStore<E: EntityId> {
 /// {
 ///     fn add_to(self, sim: &mut S) { ... }
 /// ```
-pub unsafe trait AddEntityToStore<E: EntityId, S: HasEntityStore<E>> {
-    fn add_to(self, sim: &mut S);
-}
+*/

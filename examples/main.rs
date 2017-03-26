@@ -1,8 +1,6 @@
 #[macro_use]
 extern crate complecs;
 
-use complecs::AddEntityToStore;
-
 // ============ Components =============
 component! { 
     /// The name of an entity.
