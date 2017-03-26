@@ -204,6 +204,15 @@ macro_rules! entity {
             $(
                 impl traits::EntityHasProc<super::$proc_id>for self::$entity_id {}
             )*
+            
+            impl $entity_id {
+                /// Creates the source data for an entity of this type.
+                pub fn new_data( $( $comp_name : <super::$comp_id as traits::CompId>::Type ),* ) -> Data {
+                    Data {
+                        $( $comp_name ),*
+                    }
+                }
+            }
         
             // Create the data used to add the item.
             /// Data used to add this entity to a simulation.

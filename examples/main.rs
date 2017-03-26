@@ -117,10 +117,10 @@ fn main() {
 
     let mut sim = Sim::new();
     
-    let player = player::Data::new(String::from("Jakob"), 22);
+    let player = EPlayer::new_data(String::from("Jakob"), 22);
     player.add_to(&mut sim);
     
-    let another = player::Data::new(String::from("test"), 9001);
+    let another = EPlayer::new_data(String::from("test"), 9001);
     another.add_to(&mut sim);
     
     //println!("\n==== BEFORE WRITE ====\n");
