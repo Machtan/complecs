@@ -205,12 +205,14 @@ macro_rules! entity {
             $( #[ $entity_meta:meta ] )*
             pub struct $entity_id:ident {
                 $(
-                    $comp_name:ident : $comp_id:ident,
-                )*
+                    $comp_name:ident : $comp_id:ident
+                ),*
+                $(,)*
             }
             
             impl {
-                $( $proc_id:ident, )*
+                $( $proc_id:ident ),*
+                $(,)*
             }
         }
     ) => {
