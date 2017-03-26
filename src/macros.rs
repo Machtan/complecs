@@ -5,7 +5,7 @@
 macro_rules! component {
     ( 
         $( #[$meta:meta] )*
-        pub $name:ident : $type:ty
+        pub $name:ident ( $type:ty );
     ) => {
         $( #[$meta] )*
         #[derive(Debug, Clone, Copy)]
@@ -13,6 +13,59 @@ macro_rules! component {
         
         impl complecs::traits::CompId for $name {
             type Type = $type;
+        }
+    }
+}
+
+/// Declares multiple components with the given names and types, and 
+/// a struct for storing them.
+#[macro_export]
+macro_rules! components_and_storage {
+    // No trailing comma.
+    (
+        $( #[ $store_meta:meta ] )*
+        pub struct $store:ident {
+            $(
+                $( #[ $comp_meta:meta ] )*
+                pub $member:ident : $name:ident ( $type:ty )
+            ),*
+        }
+    ) => {
+        
+        $(
+            component! { 
+                $( #[ $comp_meta ] )*
+                pub $name ( $type );
+            }
+        )*
+        
+        $( #[ $store_meta ] )*
+        component_storage! {
+            pub struct $store {
+                $(
+                    $member : $name,
+                )*
+            }
+        }
+    };
+    // Trailing comma
+    (
+        $( #[ $store_meta:meta ] )*
+        pub struct $store:ident {
+            $(
+                $( #[$comp_meta:meta] )*
+                pub $member:ident : $name:ident ( $type:ty ),
+            )+
+        }
+    ) => {
+        components_and_storage! {
+            $( #[$store_meta] )*
+            pub struct $store {
+                $(
+                    $( #[$comp_meta] )*
+                    pub $member: $name ( $type )
+                ),*
+            }
         }
     }
 }

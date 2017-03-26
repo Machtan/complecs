@@ -2,22 +2,18 @@
 extern crate complecs;
 
 // ============ Components =============
-component! { 
-    /// The name of an entity.
-    pub CName: String
-}
-component! {
-    /// The age of an entity.
-    pub CAge: u32
-}
 
-component_storage! {
+
+components_and_storage! {
     /// Stores all the components!
     pub struct Components {
-        names: CName,
-        ages: CAge,
+        /// The name of an entity.
+        pub name: CName (String),
+        /// The age of an entity.
+        pub age: CAge (u32),
     }
 }
+
 
 // ============= Processes ================
 
