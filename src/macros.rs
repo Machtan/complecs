@@ -69,14 +69,17 @@ macro_rules! process {
         pub mod $mod:ident {
             $( #[$run_meta:meta] )*
             pub fn $proc_id:ident::run(
+                &mut S
                 // Mutable components, always first.
-                $( mut $mut_gensym:ident $mut_arg:ident : &mut $mut_comp:ident, )*
+                $(, mut $mut_gensym:ident $mut_arg:ident : &mut $mut_comp:ident )*
                 
                 // Immutable components.
-                $( ref $gensym:ident $arg:ident : & $comp:ident, )*
+                $(, ref $gensym:ident $arg:ident : & $comp:ident )*
                 
                 // External arguments (relevant here?)
-                $( ext $ext_arg:ident : $ext_ty:ty, )*
+                $(, ext $ext_arg:ident : $ext_ty:ty )*
+                
+                $(,)*
             ) $body:block
         }
     ) => {

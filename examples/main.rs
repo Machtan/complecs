@@ -20,7 +20,7 @@ components_and_store! {
 process! {
     pub mod print_info {
         /// Prints info about an entity.
-        pub fn PPrintInfo::run(ref n name: &CName, ref a age: &CAge,) { 
+        pub fn PPrintInfo::run(&mut S, ref n name: &CName, ref a age: &CAge) { 
             println!("{} is {} year(s) old", name, age); 
         }
     }
@@ -29,7 +29,7 @@ process! {
 process! {
     pub mod double_age {
         /// Doubles the age of an entity.
-        pub fn PDoubleAge::run(mut a age: &mut CAge,) {
+        pub fn PDoubleAge::run(&mut S, mut a age: &mut CAge) {
             *age *= 2;
         }
     }
@@ -39,6 +39,7 @@ process! {
     pub mod print_with_last_name {
         /// Prints the name of the entity with an added last name.
         pub fn PPrintWithLastName::run(
+            &mut S,
             ref n name: &CName, 
             ext last_name: &str,
         ) {
